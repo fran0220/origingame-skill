@@ -4,22 +4,30 @@ Agent skill for deploying AI-made web games (HTML / three.js / Godot HTML5 expor
 
 ## Install
 
-Clone this repo into your agent tool's skills directory:
+One-liner (auto-detects Claude Code / Factory Droid and installs or updates in place):
 
 ```bash
-# Claude Code (personal)
-git clone https://github.com/fran0220/origingame-skill.git ~/.claude/skills/origingame-deploy
-
-# Claude Code (project)
-git clone https://github.com/fran0220/origingame-skill.git .claude/skills/origingame-deploy
-
-# Factory Droid
-git clone https://github.com/fran0220/origingame-skill.git ~/.factory/skills/origingame-deploy
+curl -fsSL https://raw.githubusercontent.com/fran0220/origingame-skill/main/install.sh | bash
 ```
 
-Any other tool that supports the Agent Skills format (a directory containing `SKILL.md`) works the same way: clone into its skills directory.
+Target a specific tool or directory:
+
+```bash
+curl -fsSL .../install.sh | bash -s -- --claude     # ~/.claude/skills
+curl -fsSL .../install.sh | bash -s -- --droid      # ~/.factory/skills
+curl -fsSL .../install.sh | bash -s -- --project    # ./.claude/skills (project-level)
+curl -fsSL .../install.sh | bash -s -- --dir <path> # any skills directory
+```
+
+Manual install (any tool supporting the Agent Skills format, i.e. a directory containing `SKILL.md`):
+
+```bash
+git clone https://github.com/fran0220/origingame-skill.git ~/.claude/skills/origingame-deploy
+```
 
 ## Update
+
+Re-run the install one-liner, or:
 
 ```bash
 git -C ~/.claude/skills/origingame-deploy pull
@@ -37,4 +45,5 @@ See [SKILL.md](SKILL.md) for the full usage the agent follows.
 ```
 SKILL.md            skill instructions (deploy API, OG SDK reference)
 scripts/deploy.sh   deploy helper script
+install.sh          installer (curl | bash)
 ```
