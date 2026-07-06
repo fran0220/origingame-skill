@@ -36,7 +36,7 @@ git -C ~/.claude/skills/origingame-deploy pull
 ## Requirements
 
 - `OG_HOST` - the OriginGame portal origin
-- `OG_DEPLOY_KEY` - deploy key issued by the platform admin (`ogk_...`)
+- `OG_API_KEY` - platform API key (`sk-...`), self-serve: register at `$OG_HOST/login` and create one in the console
 
 See [SKILL.md](SKILL.md) for the full usage the agent follows.
 

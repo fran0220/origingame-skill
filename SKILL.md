@@ -11,7 +11,9 @@ Deploy a finished web game to an OriginGame server. Players get an instant-play 
 
 Environment variables (ask the user if missing):
 - `OG_HOST` - portal origin, e.g. `https://origingame.example.com` (dev: `http://localhost:8787`)
-- `OG_DEPLOY_KEY` - deploy key issued by the platform admin (`ogk_...`)
+- `OG_API_KEY` - platform API key (`sk-...`)
+
+No key yet? Tell the user to register a free account at `$OG_HOST/login`, then create a key in the console at `$OG_HOST/console`. The same key covers deploys and other platform features (e.g. asset generation).
 
 ## Before deploying, check the game directory
 
@@ -32,7 +34,7 @@ scripts/deploy.sh <game-dir> --title "My Game" [options]
 # raw curl equivalent
 cd <game-dir> && zip -qr /tmp/game.zip .
 curl -sS -X POST "$OG_HOST/api/deploy" \
-  -H "Authorization: Bearer $OG_DEPLOY_KEY" \
+  -H "Authorization: Bearer $OG_API_KEY" \
   -F "file=@/tmp/game.zip" \
   -F "title=My Game" \
   -F "engine=threejs" \
@@ -61,9 +63,9 @@ Response: `{ "gameId": "...", "playUrl": "...", "portalUrl": "..." }`. Always re
 
 Update an existing game (new version, same URL):
 ```bash
-curl -sS -X PUT "$OG_HOST/api/deploy/<gameId>" -H "Authorization: Bearer $OG_DEPLOY_KEY" -F "file=@/tmp/game.zip"
+curl -sS -X PUT "$OG_HOST/api/deploy/<gameId>" -H "Authorization: Bearer $OG_API_KEY" -F "file=@/tmp/game.zip"
 ```
-Delete: `curl -X DELETE "$OG_HOST/api/deploy/<gameId>" -H "Authorization: Bearer $OG_DEPLOY_KEY"`
+Delete: `curl -X DELETE "$OG_HOST/api/deploy/<gameId>" -H "Authorization: Bearer $OG_API_KEY"`
 List my games: `GET $OG_HOST/api/deploy/mine`
 
 ## OG SDK (auto-injected, zero setup)

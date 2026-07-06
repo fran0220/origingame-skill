@@ -7,7 +7,7 @@
 set -euo pipefail
 
 OG_HOST="${OG_HOST:-http://localhost:8787}"
-: "${OG_DEPLOY_KEY:?set OG_DEPLOY_KEY (ogk_...)}"
+: "${OG_API_KEY:?set OG_API_KEY (sk-..., create one in the console at \$OG_HOST/console)}"
 
 DIR="${1:?usage: deploy.sh <game-dir> --title \"My Game\" [options]}"
 shift
@@ -40,7 +40,7 @@ ZIP="$(mktemp -t oggame).zip"
 trap 'rm -f "$ZIP"' EXIT
 (cd "$DIR" && zip -qr "$ZIP" . -x "node_modules/*" -x ".git/*" -x "*.map")
 
-ARGS=(-sS -H "Authorization: Bearer $OG_DEPLOY_KEY" -F "file=@$ZIP;type=application/zip")
+ARGS=(-sS -H "Authorization: Bearer $OG_API_KEY" -F "file=@$ZIP;type=application/zip")
 [[ -n "$TITLE" ]] && ARGS+=(-F "title=$TITLE")
 ARGS+=(-F "engine=$ENGINE" -F "license_mode=$LICENSE" -F "orientation=$ORIENTATION" -F "max_players=$MAX_PLAYERS")
 [[ -n "$LICENSE_NAME" ]] && ARGS+=(-F "license_name=$LICENSE_NAME")
