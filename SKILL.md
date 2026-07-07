@@ -13,7 +13,25 @@ Environment variables (ask the user if missing):
 - `OG_HOST` - portal origin, e.g. `https://origingame.example.com` (dev: `http://localhost:8787`)
 - `OG_API_KEY` - platform API key (`sk-...`)
 
-No key yet? Tell the user to register a free account at `$OG_HOST/login`, then create a key in the console at `$OG_HOST/console`. The same key covers deploys and other platform features (e.g. asset generation).
+No key yet? Tell the user to register a free account at `$OG_HOST/login`, then create a key in the dashboard at `$OG_HOST/dashboard`. The same key covers deploys and other platform features (e.g. asset generation).
+
+## Kenney asset library
+
+Before generating new art from scratch, search the built-in Kenney CC0 asset library. Download assets into the game project and reference them with relative paths; never hotlink `/api/assets/...` URLs from a deployed game.
+
+```bash
+# Search by natural language + facets
+scripts/assets.sh search "pixel platformer player and grass tiles" --kind 2d --format png --limit 8
+scripts/assets.sh search "low poly racing car road barrier" --kind 3d --format glb
+
+# Inspect a result group, then download one file or the whole group into the project
+scripts/assets.sh show <group-id>
+scripts/assets.sh get <file-id> --out ./assets/kenney
+scripts/assets.sh bundle --group <group-id> --out ./assets/kenney
+```
+
+`search` can run without a key if the server allows public browsing. `get` and `bundle` may require `OG_API_KEY` (`sk-...`). The helper writes `asset-manifest.json` and `kenney-license.txt` next to downloaded files.
+Bundle ZIP paths are relative to `--out`; for the default `./assets/kenney`, use paths like `./assets/kenney/2D assets/...` in the game.
 
 ## Before deploying, check the game directory
 
@@ -58,6 +76,11 @@ Fields:
 | `max_players` | 1-16 | >1 shows the multiplayer badge |
 | `unlisted` | `1` | playable by URL but hidden from portal |
 | `cover` | png/jpg ≤2MB | 16:9 recommended; auto-placeholder if omitted |
+| `creator` | handle e.g. `nova` | attributes the game to a creator; enables the `/u/<handle>` profile page |
+| `creator_name` | display name | optional friendly name for the byline |
+| `assets_used` | JSON array | asset group ids used, for portal backlinks; `deploy.sh` auto-detects asset manifests under `assets/` |
+
+`deploy.sh` also accepts `--creator`, `--creator-name`, `--assets` (or `OG_CREATOR` / `OG_CREATOR_NAME` env). When your game dir has an `asset-manifest.json` under `assets/` (written by `assets.sh`), the used assets are attached automatically for portal attribution.
 
 Response: `{ "gameId": "...", "playUrl": "...", "portalUrl": "..." }`. Always report `playUrl` and `portalUrl` to the user.
 

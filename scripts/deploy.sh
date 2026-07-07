@@ -7,13 +7,14 @@
 set -euo pipefail
 
 OG_HOST="${OG_HOST:-http://localhost:8787}"
-: "${OG_API_KEY:?set OG_API_KEY (sk-..., create one in the console at \$OG_HOST/console)}"
+: "${OG_API_KEY:?set OG_API_KEY (sk-..., create one in the dashboard at \$OG_HOST/dashboard)}"
 
 DIR="${1:?usage: deploy.sh <game-dir> --title \"My Game\" [options]}"
 shift
 
 TITLE="" ENGINE="html" LICENSE="protected" LICENSE_NAME="" SOURCE_URL=""
 DESCRIPTION="" ORIENTATION="any" ASPECT="" MAX_PLAYERS="1" UNLISTED="0" COVER="" UPDATE_ID=""
+CREATOR="${OG_CREATOR:-}" CREATOR_NAME="${OG_CREATOR_NAME:-}" ASSETS=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -28,10 +29,31 @@ while [[ $# -gt 0 ]]; do
     --max-players) MAX_PLAYERS="$2"; shift 2 ;;
     --unlisted) UNLISTED="1"; shift ;;
     --cover) COVER="$2"; shift 2 ;;
+    --creator) CREATOR="$2"; shift 2 ;;
+    --creator-name) CREATOR_NAME="$2"; shift 2 ;;
+    --assets) ASSETS="$2"; shift 2 ;;
     --update) UPDATE_ID="$2"; shift 2 ;;
     *) echo "unknown option: $1" >&2; exit 1 ;;
   esac
 done
+
+# Auto-detect asset group ids from a manifest written by assets.sh get/bundle.
+MANIFEST=""
+if [[ -f "$DIR/assets/asset-manifest.json" ]]; then
+  MANIFEST="$DIR/assets/asset-manifest.json"
+elif [[ -d "$DIR/assets" ]]; then
+  while IFS= read -r candidate; do MANIFEST="$candidate"; break; done < <(find "$DIR/assets" -type f -name asset-manifest.json -print 2>/dev/null || true)
+fi
+if [[ -z "$ASSETS" && -n "$MANIFEST" ]] && command -v python3 >/dev/null; then
+  ASSETS=$(python3 - "$MANIFEST" <<'PY' 2>/dev/null || true
+import json, sys
+try: files = json.load(open(sys.argv[1])).get('files', [])
+except Exception: files = []
+ids = sorted({f.get('groupId') or f.get('group_id') for f in files if isinstance(f, dict) and (f.get('groupId') or f.get('group_id'))})
+print(','.join(ids))
+PY
+)
+fi
 
 [[ -f "$DIR/index.html" ]] || { echo "error: $DIR/index.html not found" >&2; exit 1; }
 [[ -n "$TITLE" || -n "$UPDATE_ID" ]] || { echo "error: --title is required" >&2; exit 1; }
@@ -49,6 +71,9 @@ ARGS+=(-F "engine=$ENGINE" -F "license_mode=$LICENSE" -F "orientation=$ORIENTATI
 [[ -n "$ASPECT" ]] && ARGS+=(-F "aspect=$ASPECT")
 [[ "$UNLISTED" == "1" ]] && ARGS+=(-F "unlisted=1")
 [[ -n "$COVER" ]] && ARGS+=(-F "cover=@$COVER")
+[[ -n "$CREATOR" ]] && ARGS+=(-F "creator=$CREATOR")
+[[ -n "$CREATOR_NAME" ]] && ARGS+=(-F "creator_name=$CREATOR_NAME")
+[[ -n "$ASSETS" ]] && ARGS+=(-F "assets_used=$ASSETS")
 
 if [[ -n "$UPDATE_ID" ]]; then
   curl -X PUT "${ARGS[@]}" "$OG_HOST/api/deploy/$UPDATE_ID"
