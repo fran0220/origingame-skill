@@ -3,6 +3,9 @@
 # usage:
 #   curl -fsSL https://raw.githubusercontent.com/fran0220/origingame-skill/main/install.sh | bash
 #   ... | bash -s -- --claude          # only Claude Code (~/.claude/skills)
+#   ... | bash -s -- --codex           # only Codex CLI (~/.codex/skills)
+#   ... | bash -s -- --pi              # only Pi (~/.pi/skills)
+#   ... | bash -s -- --cursor          # only Cursor (~/.cursor/skills)
 #   ... | bash -s -- --droid           # only Factory Droid (~/.factory/skills)
 #   ... | bash -s -- --project         # current project (.claude/skills)
 #   ... | bash -s -- --dir <path>      # custom skills directory
@@ -14,19 +17,25 @@ NAME="origingame-deploy"
 targets=()
 case "${1:-auto}" in
   --claude) targets=("$HOME/.claude/skills") ;;
+  --codex) targets=("$HOME/.codex/skills") ;;
+  --pi) targets=("$HOME/.pi/skills") ;;
+  --cursor) targets=("$HOME/.cursor/skills") ;;
   --droid|--factory) targets=("$HOME/.factory/skills") ;;
   --project) targets=("$PWD/.claude/skills") ;;
   --dir) targets=("${2:?usage: --dir <path>}") ;;
   auto)
     [ -d "$HOME/.claude" ] && targets+=("$HOME/.claude/skills")
+    [ -d "$HOME/.codex" ] && targets+=("$HOME/.codex/skills")
+    [ -d "$HOME/.pi" ] && targets+=("$HOME/.pi/skills")
+    [ -d "$HOME/.cursor" ] && targets+=("$HOME/.cursor/skills")
     [ -d "$HOME/.factory" ] && targets+=("$HOME/.factory/skills")
     ;;
-  *) echo "unknown option: $1 (use --claude | --droid | --project | --dir <path>)" >&2; exit 1 ;;
+  *) echo "unknown option: $1 (use --claude | --codex | --pi | --cursor | --droid | --project | --dir <path>)" >&2; exit 1 ;;
 esac
 
 if [ ${#targets[@]} -eq 0 ]; then
-  echo "no agent tool detected (~/.claude or ~/.factory not found)." >&2
-  echo "pick a target explicitly: --claude | --droid | --project | --dir <path>" >&2
+  echo "no agent tool detected (~/.claude, ~/.codex, ~/.pi, ~/.cursor or ~/.factory not found)." >&2
+  echo "pick a target explicitly: --claude | --codex | --pi | --cursor | --droid | --project | --dir <path>" >&2
   exit 1
 fi
 
