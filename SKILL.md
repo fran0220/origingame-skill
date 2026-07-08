@@ -7,6 +7,17 @@ description: Deploy AI-made web games (HTML / three.js / Godot HTML5 export) to 
 
 Deploy a finished web game to an OriginGame server. Players get an instant-play URL, a portal page with likes/comments, an auto-generated PWA (installable, offline-capable), and optional leaderboard / cloud save / multiplayer.
 
+## Skill ecosystem
+
+This deploy skill is the backward-compatible root of the published OriginGame skill package. When the task is not strictly deployment, prefer the focused sibling skills installed by `install.sh`:
+
+- `developing-origingame-games` — build or modify HTML/canvas, three.js, or Godot Web games before deployment.
+- `using-origingame-assets` — search/download the built-in Kenney CC0 asset library and attach asset attribution.
+- `using-origingame-gateway` — use `/gw/v1` and Gateway `sk-` keys for quota-aware OpenAI-compatible model calls.
+- `maintaining-origingame-skills` — maintain this skill/plugin ecosystem.
+
+Do not silently deploy or spend Gateway quota unless the user explicitly asked for that operation.
+
 ## Prerequisites
 
 Environment variables (ask the user if missing):
@@ -35,6 +46,12 @@ Bundle ZIP paths are relative to `--out`; for the default `./assets/kenney`, use
 
 ## Before deploying, check the game directory
 
+Run the helper if available:
+
+```bash
+scripts/dev-check.sh <game-dir>
+```
+
 1. `index.html` MUST exist at the directory root.
    - Godot: export for Web, then rename `yourgame.html` to `index.html`.
    - Vite/bundled three.js projects: run the build first and deploy the build output dir (e.g. `dist/`), never the source dir.
@@ -56,6 +73,7 @@ curl -sS -X POST "$OG_HOST/api/deploy" \
   -F "file=@/tmp/game.zip" \
   -F "title=My Game" \
   -F "engine=threejs" \
+  -F "genre=arcade" \
   -F "license_mode=protected" \
   -F "description=One-line pitch" \
   -F "max_players=1" \
@@ -67,6 +85,7 @@ Fields:
 |---|---|---|
 | `title` | text | required |
 | `engine` | `html` / `threejs` / `godot` | default `html` |
+| `genre` | `arcade` / `action` / `puzzle` / `shooter` / `platformer` / `racing` / `strategy` / `casual` / `cards` / `other` | gameplay category for the portal Arcade browse tabs; pick the closest one, default `other` |
 | `license_mode` | `protected` / `open` | `protected` = no derivatives: JS is auto-minified+obfuscated, no source access. `open` = open source: shows license badge and source link |
 | `license_name` | e.g. `MIT` | only for `open` |
 | `source_url` | repo URL | only for `open` |

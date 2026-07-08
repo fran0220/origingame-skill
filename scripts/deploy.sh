@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # OriginGame deploy helper.
 # usage: deploy.sh <game-dir> --title "My Game" [--engine html|threejs|godot]
+#        [--genre arcade|action|puzzle|shooter|platformer|racing|strategy|casual|cards|other]
 #        [--license protected|open] [--license-name MIT] [--source-url URL]
 #        [--description TEXT] [--orientation any|landscape|portrait] [--aspect 16:9]
 #        [--max-players N] [--unlisted] [--cover PATH] [--update GAME_ID]
@@ -12,7 +13,7 @@ OG_HOST="${OG_HOST:-http://localhost:8787}"
 DIR="${1:?usage: deploy.sh <game-dir> --title \"My Game\" [options]}"
 shift
 
-TITLE="" ENGINE="html" LICENSE="protected" LICENSE_NAME="" SOURCE_URL=""
+TITLE="" ENGINE="html" GENRE="" LICENSE="protected" LICENSE_NAME="" SOURCE_URL=""
 DESCRIPTION="" ORIENTATION="any" ASPECT="" MAX_PLAYERS="1" UNLISTED="0" COVER="" UPDATE_ID=""
 CREATOR="${OG_CREATOR:-}" CREATOR_NAME="${OG_CREATOR_NAME:-}" ASSETS=""
 
@@ -20,6 +21,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --title) TITLE="$2"; shift 2 ;;
     --engine) ENGINE="$2"; shift 2 ;;
+    --genre) GENRE="$2"; shift 2 ;;
     --license) LICENSE="$2"; shift 2 ;;
     --license-name) LICENSE_NAME="$2"; shift 2 ;;
     --source-url) SOURCE_URL="$2"; shift 2 ;;
@@ -65,6 +67,7 @@ trap 'rm -f "$ZIP"' EXIT
 ARGS=(-sS -H "Authorization: Bearer $OG_API_KEY" -F "file=@$ZIP;type=application/zip")
 [[ -n "$TITLE" ]] && ARGS+=(-F "title=$TITLE")
 ARGS+=(-F "engine=$ENGINE" -F "license_mode=$LICENSE" -F "orientation=$ORIENTATION" -F "max_players=$MAX_PLAYERS")
+[[ -n "$GENRE" ]] && ARGS+=(-F "genre=$GENRE")
 [[ -n "$LICENSE_NAME" ]] && ARGS+=(-F "license_name=$LICENSE_NAME")
 [[ -n "$SOURCE_URL" ]] && ARGS+=(-F "source_url=$SOURCE_URL")
 [[ -n "$DESCRIPTION" ]] && ARGS+=(-F "description=$DESCRIPTION")
