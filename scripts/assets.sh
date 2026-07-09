@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# OriginGame asset helper.
+# OriginGame asset helper (REST convenience wrapper; agents should prefer the asset MCP at
+# asset-mcp.origingame.dev). Bundles use the server fetch-plan (no zip): glTF/GLB primary + resources.
 # usage:
-#   assets.sh search "pixel platformer player" [--kind 2d] [--theme space] [--format png] [--limit 10]
+#   assets.sh search "low poly medieval knight" [--kind 3d] [--theme fantasy] [--format glb] [--limit 10]
 #   assets.sh show <group-id>
-#   assets.sh get <file-id> --out ./assets/kenney
-#   assets.sh bundle [--group <group-id>] [--file <file-id>] [--pack <pack-id>] --out ./assets/kenney
+#   assets.sh get <file-id> --out ./assets/origingame
+#   assets.sh bundle [--group <group-id>] [--file <file-id>] [--format glb|gltf] --out ./assets/origingame
 set -euo pipefail
 
 OG_HOST="${OG_HOST:-http://localhost:8787}"
@@ -81,7 +82,7 @@ PY
     need_py
     ID="${1:-}"; [[ -n "$ID" ]] || { echo "usage: assets.sh get <file-id> --out <dir>" >&2; exit 1; }
     shift
-    OUT="./assets/kenney"
+    OUT="./assets/origingame"
     while [[ $# -gt 0 ]]; do
       case "$1" in
         --out) OUT="$2"; shift 2 ;;
@@ -102,44 +103,70 @@ if p.exists():
 file=json.loads(sys.argv[2])['file']
 seen={x.get('id') for x in old}
 if file['id'] not in seen: old.append(file)
-p.write_text(json.dumps({'source':'OriginGame Kenney asset library','license':'CC0','files':old}, ensure_ascii=False, indent=2))
+p.write_text(json.dumps({'source':'OriginGame asset library','license':'CC0','files':old}, ensure_ascii=False, indent=2))
 PY
-    cat > "$OUT/kenney-license.txt" <<'TXT'
-Kenney Game Assets All-in-1
+    cat > "$OUT/ATTRIBUTION.txt" <<'TXT'
+OriginGame asset library (Kenney, KayKit, Quaternius, and more)
 License: Creative Commons Zero (CC0)
 https://creativecommons.org/publicdomain/zero/1.0/
-Credit to Kenney / www.kenney.nl is appreciated but not required.
+Credit to the original creators is appreciated but not required.
 TXT
     echo "saved $OUT/$NAME"
     ;;
   bundle)
+    # No zip: the server returns a fetch-plan (direct per-file URLs + target paths). We download each
+    # file (glTF primary + its .bin/textures) into --out, preserving the plan's relative layout.
     need_py
-    command -v unzip >/dev/null || { echo "unzip is required for bundle extraction" >&2; exit 1; }
-    OUT="./assets/kenney"
+    OUT="./assets/origingame"
+    FORMAT=""
     declare -a FILE_IDS=()
     declare -a GROUP_IDS=()
-    declare -a PACK_IDS=()
     while [[ $# -gt 0 ]]; do
       case "$1" in
         --out) OUT="$2"; shift 2 ;;
         --file) FILE_IDS+=("$2"); shift 2 ;;
         --group) GROUP_IDS+=("$2"); shift 2 ;;
-        --pack) PACK_IDS+=("$2"); shift 2 ;;
+        --format) FORMAT="$2"; shift 2 ;;
         *) echo "unknown option: $1" >&2; exit 1 ;;
       esac
     done
-    mkdir -p "$OUT"
-    BODY=$(python3 - "${FILE_IDS[*]}" "${GROUP_IDS[*]}" "${PACK_IDS[*]}" <<'PY'
+    BODY=$(python3 - "${FILE_IDS[*]}" "${GROUP_IDS[*]}" "$FORMAT" <<'PY'
 import json, sys
 def xs(s): return [x for x in s.split() if x]
-print(json.dumps({'fileIds': xs(sys.argv[1]), 'groupIds': xs(sys.argv[2]), 'packIds': xs(sys.argv[3]), 'includeManifest': True, 'includeLicense': True}))
+body={'fileIds': xs(sys.argv[1]), 'groupIds': xs(sys.argv[2])}
+if sys.argv[3]: body['format']=sys.argv[3]
+print(json.dumps(body))
 PY
 )
-    ZIP=$(mktemp -t og-assets).zip
-    trap 'rm -f "$ZIP"' EXIT
-    curl -fsS -X POST "${auth_args[@]}" -H 'Content-Type: application/json' --data "$BODY" "$OG_HOST/api/assets/bundle" -o "$ZIP"
-    unzip -oq "$ZIP" -d "$OUT"
-    echo "extracted bundle to $OUT"
+    PLAN=$(curl -fsS -X POST "${auth_args[@]}" -H 'Content-Type: application/json' --data "$BODY" "$OG_HOST/api/assets/bundle")
+    # Emit "targetRelPath<TAB>downloadURL" lines (host rewritten to OG_HOST), plus attribution
+    # and the asset-manifest.json that deploy.sh auto-detects for portal attribution.
+    # Plan is passed as argv: the heredoc owns stdin, so piping it would be silently dropped.
+    python3 - "$PLAN" "$OG_HOST" "$OUT" <<'PY' | while IFS=$'\t' read -r REL URL; do
+import json, sys, urllib.parse
+plan=json.loads(sys.argv[1])
+host=sys.argv[2].rstrip('/')
+out=sys.argv[3]
+base=(plan.get('targetDir') or 'assets/origingame').rstrip('/')+'/'
+for f in plan.get('files', []):
+    tp=f['targetPath']
+    rel=tp[len(base):] if tp.startswith(base) else tp
+    u=urllib.parse.urlparse(f['url'])
+    url=host + u.path + (('?'+u.query) if u.query else '')
+    print(rel+'\t'+url)
+import pathlib
+pathlib.Path(out).mkdir(parents=True, exist_ok=True)
+cred='\n'.join(a.get('credit','') for a in plan.get('attribution', []))
+(pathlib.Path(out)/'ATTRIBUTION.txt').write_text((cred or 'CC0')+'\n')
+manifest=plan.get('manifest')
+if manifest:
+    (pathlib.Path(out)/'asset-manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
+PY
+      DEST="$OUT/$REL"
+      mkdir -p "$(dirname "$DEST")"
+      curl -fL "${auth_args[@]}" "$URL" -o "$DEST"
+    done
+    echo "fetched bundle into $OUT"
     ;;
   *)
     echo "unknown command: $CMD" >&2; exit 1 ;;

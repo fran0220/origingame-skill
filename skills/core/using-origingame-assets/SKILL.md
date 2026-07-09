@@ -1,51 +1,51 @@
 ---
 name: using-origingame-assets
-description: Searches, inspects, downloads, and attributes OriginGame's built-in Kenney CC0 game asset library. Use when a game needs sprites, tiles, UI art, audio, or 3D models.
+description: Finds, previews, and pulls OriginGame's CC0 game assets (Kenney, KayKit, Quaternius, icons) for a game. Prefer the remote asset MCP; a REST helper (assets.sh) is available as a fallback. Use when a game needs sprites, tiles, UI/icons, audio, or 3D models.
 ---
 
 # Using OriginGame Assets
 
-Use the built-in Kenney CC0 asset library before generating new assets. Download assets into the game project and reference local files with relative paths; never hotlink asset API URLs from a deployed game.
+Use the built-in CC0 asset library before generating new art. Every 3D model exposes a web-ready
+glTF/GLB primary; some formats (e.g. FBX) are download-only. Pull assets into the project and
+reference them by relative path; never hotlink asset API URLs from a deployed game.
 
-## Search and inspect
+## Preferred: the asset MCP
 
-Use the helper bundled with `origingame-deploy` when installed:
+Connect an MCP-capable agent to the remote HTTP MCP and authenticate with an OriginGame `sk-` key:
+
+```
+endpoint: https://asset-mcp.origingame.dev/mcp
+header:   Authorization: Bearer sk-...
+```
+
+Tools:
+
+- `assets_search` — query + facets (`kind`, `theme`, `visual_style`, `role`, `format`, `game_genre`, `poly_budget`, `source`). Returns each model's web-ready primary (glTF/GLB) and tags.
+- `assets_show` — full detail for a group: variant files, formats, target paths, download-only flags.
+- `assets_bundle` — a **fetch-plan (no zip)**: direct per-file URLs + target paths under `assets/origingame/`, plus attribution and a manifest. Download each file to its `targetPath` (glTF primary + its `.bin`/textures are included as resources).
+- `assets_recommend` — role-bucketed picks (characters / enemies / props / environment / tiles / ui / audio) for a short game brief.
+- `assets_facets` — the available facets and values for building filters.
+
+Anonymous browsing (search / show / static thumbnails) is allowed; downloads, glTF resources, and the
+interactive 3D viewer require an `sk-` key. Create one at `$OG_HOST/dashboard`. Never print or commit it.
+
+## Fallback: assets.sh (REST)
+
+When MCP is unavailable, use the bundled helper:
 
 ```bash
-../origingame-deploy/scripts/assets.sh search "pixel platformer player and grass tiles" --kind 2d --format png --limit 8
-../origingame-deploy/scripts/assets.sh search "low poly racing car road barrier" --kind 3d --format glb
+../origingame-deploy/scripts/assets.sh search "low poly medieval knight" --kind 3d --format glb
 ../origingame-deploy/scripts/assets.sh show <group-id>
+../origingame-deploy/scripts/assets.sh bundle --group <group-id> --format glb --out ./assets/origingame
 ```
 
-Useful filters include `--kind`, `--theme`, `--visual_style`, `--role`, `--format`, `--game_genre`, `--camera_view`, and `--environment`.
-
-## Download into the project
-
-```bash
-../origingame-deploy/scripts/assets.sh get <file-id> --out ./assets/kenney
-../origingame-deploy/scripts/assets.sh bundle --group <group-id> --out ./assets/kenney
-```
-
-The helper writes:
-
-- `asset-manifest.json` for deploy attribution.
-- `kenney-license.txt` with the CC0 license note.
-
-Bundle paths are relative to `--out`. For the default `./assets/kenney`, use paths like:
-
-```html
-<img src="./assets/kenney/2D assets/.../player.png" alt="">
-```
-
-## Auth behavior
-
-- `search` and `show` can run without a key when the server allows public browsing.
-- `get` and `bundle` may require `OG_API_KEY` (`sk-...`). Create one at `$OG_HOST/dashboard`.
-- Never print or commit `OG_API_KEY`.
+`bundle` consumes the same fetch-plan and writes files under `--out` (default `./assets/origingame`)
+plus `ATTRIBUTION.txt`. `search`/`show` work without a key; `bundle`/`get` may require `OG_API_KEY` (`sk-...`).
 
 ## Deploy attribution
 
-`deploy.sh` auto-detects `asset-manifest.json` under `assets/` and sends the used asset group ids as `assets_used`. If assets live elsewhere, pass them explicitly:
+`deploy.sh` auto-detects `asset-manifest.json` under `assets/` and sends the used asset group ids as
+`assets_used`. If assets live elsewhere, pass them explicitly:
 
 ```bash
 ../origingame-deploy/scripts/deploy.sh ./dist --title "My Game" --assets "groupid1,groupid2"
@@ -53,6 +53,6 @@ Bundle paths are relative to `--out`. For the default `./assets/kenney`, use pat
 
 ## Selection guidance
 
-- Prefer one cohesive pack or visual style per game scene.
-- Keep downloaded bundles small; pull only the groups/files the game actually uses.
-- Preserve `kenney-license.txt` in the project, even though CC0 attribution is optional.
+- Prefer one cohesive pack or visual style per scene; keep `poly_budget` consistent for 3D.
+- Pull only the groups/files the game actually uses.
+- Preserve `ATTRIBUTION.txt` in the project, even though CC0 attribution is optional.

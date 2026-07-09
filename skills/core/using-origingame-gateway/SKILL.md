@@ -47,6 +47,39 @@ curl -fsS "$OG_HOST/gw/v1/chat/completions" \
 
 Use the OpenAI-compatible client shape in app/server code too; set `baseURL` to `$OG_HOST/gw/v1` and pass the Gateway key as the bearer token.
 
+## Media generation (image + speech)
+
+The Gateway relays OpenAI-compatible image and text-to-speech. Prefer the CC0 asset
+library first; use generation for bespoke art or voiceover. Generation spends quota,
+so only run it when the user asked for it.
+
+Image (`gpt-image-2`) — returns `data[0].b64_json` (base64 PNG); decode and save into the project:
+
+```bash
+curl -fsS "$OG_HOST/gw/v1/images/generations" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "model": "gpt-image-2", "prompt": "flat pixel-art coin, transparent background", "n": 1, "size": "1024x1024" }'
+```
+
+Image generation often takes 15-60s. The public `origingame.dev` edge (EdgeOne CDN)
+cuts origin responses around 15s and returns HTTP 524, so when `$OG_HOST` is the
+public portal and an image call 524s, retry against the Gateway origin directly with
+the same key: `https://api.origingame.dev/v1/images/generations`. Chat and speech are
+fast enough that `$OG_HOST/gw/v1` remains the default for them.
+
+Speech / text-to-speech (`eleven_v3`) — `voice` must be a real ElevenLabs `voice_id`
+(generic OpenAI names like `alloy` are rejected); returns raw MP3 bytes:
+
+```bash
+curl -fsS "$OG_HOST/gw/v1/audio/speech" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "model": "eleven_v3", "input": "Welcome, pilot.", "voice": "21m00Tcm4TlvDq8ikWAM", "response_format": "mp3" }' \
+  --output ./assets/audio/intro.mp3
+```
+
+Sound effects and music are not relayed through the Gateway today (only speech). Pull
+those from the CC0 asset library (`using-origingame-assets`) instead.
+
 ## Browser dashboard APIs
 
 The public dashboard uses `/gw/api/*` with Gateway session cookies and `New-Api-User`. Agent-side scripts should prefer `OG_API_KEY` plus `/gw/v1/*`; do not replay user cookies unless specifically debugging dashboard behavior in a browser session.

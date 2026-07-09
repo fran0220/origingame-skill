@@ -12,7 +12,7 @@ Deploy a finished web game to an OriginGame server. Players get an instant-play 
 This deploy skill is the backward-compatible root of the published OriginGame skill package. When the task is not strictly deployment, prefer the focused sibling skills installed by `install.sh`:
 
 - `developing-origingame-games` — build or modify HTML/canvas, three.js, or Godot Web games before deployment.
-- `using-origingame-assets` — search/download the built-in Kenney CC0 asset library and attach asset attribution.
+- `using-origingame-assets` — find and pull the built-in CC0 asset library (Kenney/KayKit/Quaternius/icons) via the asset MCP (or the `assets.sh` REST fallback) and attach attribution.
 - `using-origingame-gateway` — use `/gw/v1` and Gateway `sk-` keys for quota-aware OpenAI-compatible model calls.
 - `maintaining-origingame-skills` — maintain this skill/plugin ecosystem.
 
@@ -26,23 +26,30 @@ Environment variables (ask the user if missing):
 
 No key yet? Tell the user to register a free account at `$OG_HOST/login`, then create a key in the dashboard at `$OG_HOST/dashboard`. The same key covers deploys and other platform features (e.g. asset generation).
 
-## Kenney asset library
+## CC0 asset library
 
-Before generating new art from scratch, search the built-in Kenney CC0 asset library. Download assets into the game project and reference them with relative paths; never hotlink `/api/assets/...` URLs from a deployed game.
+Before generating new art from scratch, search the built-in CC0 asset library (Kenney, KayKit,
+Quaternius, icon packs). Every 3D model exposes a web-ready glTF/GLB primary. Download assets into the
+game project and reference them with relative paths; never hotlink `/api/assets/...` URLs from a game.
 
-```bash
-# Search by natural language + facets
-scripts/assets.sh search "pixel platformer player and grass tiles" --kind 2d --format png --limit 8
-scripts/assets.sh search "low poly racing car road barrier" --kind 3d --format glb
+Agents should prefer the remote asset MCP (see the `using-origingame-assets` skill):
 
-# Inspect a result group, then download one file or the whole group into the project
-scripts/assets.sh show <group-id>
-scripts/assets.sh get <file-id> --out ./assets/kenney
-scripts/assets.sh bundle --group <group-id> --out ./assets/kenney
+```
+https://asset-mcp.origingame.dev/mcp   (Authorization: Bearer sk-...)
+tools: assets_search · assets_show · assets_bundle · assets_recommend · assets_facets
 ```
 
-`search` can run without a key if the server allows public browsing. `get` and `bundle` may require `OG_API_KEY` (`sk-...`). The helper writes `asset-manifest.json` and `kenney-license.txt` next to downloaded files.
-Bundle ZIP paths are relative to `--out`; for the default `./assets/kenney`, use paths like `./assets/kenney/2D assets/...` in the game.
+REST fallback via the bundled helper (bundles return a fetch-plan, no zip):
+
+```bash
+scripts/assets.sh search "low poly medieval knight" --kind 3d --format glb
+scripts/assets.sh show <group-id>
+scripts/assets.sh bundle --group <group-id> --format glb --out ./assets/origingame
+```
+
+`search`/`show` run without a key when public browsing is enabled; `bundle`/`get` may require
+`OG_API_KEY` (`sk-...`). The helper writes files under `--out` (default `./assets/origingame`) plus
+`ATTRIBUTION.txt`; reference them like `./assets/origingame/kaykit/.../model.gltf` in the game.
 
 ## Before deploying, check the game directory
 

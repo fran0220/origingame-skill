@@ -47,7 +47,7 @@ Default/core install:
 
 - `origingame-deploy` — deploy finished HTML / three.js / Godot Web games and use OG SDK reference.
 - `developing-origingame-games` — create and iterate playable web games before deployment.
-- `using-origingame-assets` — search, download, and attribute the built-in Kenney CC0 asset library.
+- `using-origingame-assets` — find and pull the built-in CC0 asset library (Kenney/KayKit/Quaternius/icons) via the asset MCP or `assets.sh`, and attach attribution.
 - `using-origingame-gateway` — use `/gw/v1` and Gateway `sk-` keys for quota-aware OpenAI-compatible calls.
 
 Optional extra install:
@@ -60,7 +60,7 @@ See [`docs/ecosystem.md`](docs/ecosystem.md) for the packaging model.
 
 ```text
 scripts/deploy.sh              deploy/update a game directory
-scripts/assets.sh              search/download/bundle Kenney assets
+scripts/assets.sh              search/show/bundle CC0 assets (fetch-plan; MCP preferred)
 scripts/scaffold-game.sh       create a dependency-free canvas starter
 scripts/dev-check.sh           validate a game directory before deploy
 scripts/gateway.sh             smoke-test /gw/v1 models and chat calls
