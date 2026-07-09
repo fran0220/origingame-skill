@@ -20,11 +20,15 @@ Do not silently deploy or spend Gateway quota unless the user explicitly asked f
 
 ## Prerequisites
 
-Environment variables (ask the user if missing):
-- `OG_HOST` - portal origin, e.g. `https://origingame.example.com` (dev: `http://localhost:8787`)
-- `OG_API_KEY` - platform API key (`sk-...`)
+This file is the **deploy skill** inside the **OriginGame Plugin** (not “the whole product”).  
+Install the plugin via Dashboard Setup or `install.sh --claude` / `--codex` / `--pi` / `--cursor`.
 
-No key yet? Tell the user to register a free account at `$OG_HOST/login`, then create a key in the dashboard at `$OG_HOST/dashboard`. The same key covers deploys and other platform features (e.g. asset generation).
+Environment variables (ask the user if missing — same contract as Studio / Dashboard):
+- `OG_HOST` — portal origin, e.g. `https://origingame.dev` (dev: `http://localhost:8787`)
+- `OG_API_KEY` — Gateway API key (`sk-...`); Studio also reads `ORIGINGAME_SK_KEY`
+
+No key yet? User must register at `$OG_HOST/login`, then create a key in **`$OG_HOST/dashboard/keys`**.  
+Dashboard Setup pastes install + env with the real key; do not invent keys.
 
 ## CC0 asset library
 
@@ -125,6 +129,8 @@ The platform injects `window.OG` into every deployed game. Do NOT bundle or impo
 const og = window.OG ?? null
 og?.ready()                                  // call once when the game has loaded
 ```
+
+**Local mock:** for previews without deploy, optionally load `sdk/dev/og-sdk-dev.js` from the monorepo (attaches a memory leaderboard/save stub). Never ship that file in production deploys.
 
 Leaderboard and cloud save (per-player, JSON up to 256KB):
 ```js

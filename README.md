@@ -1,8 +1,12 @@
-# OriginGame Skill Ecosystem
+# OriginGame Plugin
 
-Agent skills and thin plugin adapters for building, deploying, and operating AI-made web games on [OriginGame](https://github.com/fran0220/origingame).
+**Plugin** = what you install into Claude Code / Codex / Pi / Cursor / Amp.  
+**Skills** = instruction modules inside the plugin (`deploy`, `develop`, `assets`, `gateway`).  
+**Scripts** = stable CLI helpers (`deploy.sh`, `assets.sh`, …).
 
-The published repository remains backward-compatible with the original `origingame-deploy` skill, but now also includes focused skills for game development, Gateway usage, asset discovery, and skill/plugin maintenance.
+Agent plugins and thin host adapters for building, deploying, and operating AI-made web games on [OriginGame](https://github.com/fran0220/origingame).
+
+The published repository remains backward-compatible with the original `origingame-deploy` root skill, and ships the full multi-skill plugin tree.
 
 ## Install
 
