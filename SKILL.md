@@ -7,9 +7,9 @@ description: Deploy AI-made web games (HTML / three.js / Godot HTML5 export) to 
 
 Deploy a finished web game to an OriginGame server. Players get an instant-play URL, a portal page with likes/comments, an auto-generated PWA (installable, offline-capable), and optional leaderboard / cloud save / multiplayer.
 
-## Skill ecosystem
+## Plugin modules
 
-This deploy skill is the backward-compatible root of the published OriginGame skill package. When the task is not strictly deployment, prefer the focused sibling skills installed by `install.sh`:
+This deploy skill is the backward-compatible root of the **OriginGame Plugin**. Skills are modules inside the plugin, not the product surface itself. When the task is not strictly deployment, prefer the focused sibling skills installed by `install.sh`:
 
 - `developing-origingame-games` — build or modify HTML/canvas, three.js, or Godot Web games before deployment.
 - `using-origingame-assets` — find and pull the built-in CC0 asset library (Kenney/KayKit/Quaternius/icons) via the asset MCP (or the `assets.sh` REST fallback) and attach attribution.
