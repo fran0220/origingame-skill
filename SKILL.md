@@ -25,7 +25,9 @@ Install the plugin via Dashboard Setup or `install.sh --claude` / `--codex` / `-
 
 Environment variables (ask the user if missing — same contract as Studio / Dashboard):
 - `OG_HOST` — portal origin, e.g. `https://origingame.dev` (dev: `http://localhost:8787`)
-- `OG_API_KEY` — Gateway API key (`sk-...`); Studio also reads `ORIGINGAME_SK_KEY`
+- `OG_API_KEY` — Gateway API key (`sk-...`)
+
+Legacy aliases still accepted: `ORIGINGAME_SK_KEY` (= API key), `ORIGINGAME_DEPLOY_ORIGIN` / `ORIGINGAME_HOST` (= host). Prefer the `OG_*` names.
 
 No key yet? User must register at `$OG_HOST/login`, then create a key in **`$OG_HOST/dashboard/keys`**.  
 Dashboard Setup pastes install + env with the real key; do not invent keys.

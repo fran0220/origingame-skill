@@ -7,8 +7,10 @@
 #        [--max-players N] [--unlisted] [--cover PATH] [--update GAME_ID]
 set -euo pipefail
 
-OG_HOST="${OG_HOST:-http://localhost:8787}"
-: "${OG_API_KEY:?set OG_API_KEY (sk-..., create one in the dashboard at \$OG_HOST/dashboard)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=og-env.sh
+source "$SCRIPT_DIR/og-env.sh"
+og_require_api_key
 
 DIR="${1:?usage: deploy.sh <game-dir> --title \"My Game\" [options]}"
 shift

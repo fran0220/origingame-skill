@@ -63,15 +63,18 @@ Deploy, Gateway, production, and billing-related actions stay explicit. Skills m
 
 ## Env contract (unified)
 
-| Variable | Meaning | Used by |
-|---|---|---|
-| `OG_API_KEY` | Gateway `sk-…` | Plugin scripts, Dashboard Setup |
-| `ORIGINGAME_SK_KEY` | Same key (Studio alias) | Studio main process (also accepts `OG_API_KEY`) |
-| `OG_HOST` | Portal origin (deploy + docs links) | Plugin `deploy.sh`, Studio deploy origin |
-| `ORIGINGAME_DEPLOY_ORIGIN` | Studio publish origin override | Studio (allowlist: localhost:8787 + `https://*.origingame.dev`) |
+**Canonical names only in new docs and Setup snippets.** Legacy aliases remain accepted at runtime.
+
+| Purpose | Canonical | Legacy aliases (accepted) | Used by |
+|---|---|---|---|
+| Gateway `sk-…` key | **`OG_API_KEY`** | `ORIGINGAME_SK_KEY` | Plugin, Studio, ogkit, Dashboard Setup |
+| Portal / API origin | **`OG_HOST`** | `ORIGINGAME_DEPLOY_ORIGIN`, `ORIGINGAME_HOST` | Plugin deploy, Studio publish allowlist, ogkit |
+
+Resolution order: **canonical env → aliases → Studio connection file** (`~/.origingame-studio/origingame-connection.json`).  
+When Studio saves Settings → OriginGame, it syncs **both** canonical and alias env slots for the process.
 
 Dashboard Setup generates `OG_API_KEY` + `OG_HOST` + `OPENAI_BASE_URL` for agents.  
-Studio Settings → OriginGame stores key + allowlisted origin under `~/.origingame-studio/`.
+Never print or commit raw `sk-` values.
 
 ## Workbench parity map
 

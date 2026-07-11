@@ -6,13 +6,15 @@
 #   gateway.sh raw GET /v1/models [json-body]
 set -euo pipefail
 
-OG_HOST="${OG_HOST:-http://localhost:8787}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=og-env.sh
+source "$SCRIPT_DIR/og-env.sh"
 CMD="${1:-}"
 [[ -n "$CMD" ]] || { echo "usage: gateway.sh models|chat|raw ..." >&2; exit 1; }
 shift || true
 
 need_key() {
-  : "${OG_API_KEY:?set OG_API_KEY (sk-..., create one in the dashboard at \$OG_HOST/dashboard)}"
+  og_require_api_key
 }
 
 need_py() {
