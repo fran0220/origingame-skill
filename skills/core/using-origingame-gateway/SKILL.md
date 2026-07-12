@@ -77,8 +77,24 @@ curl -fsS "$OG_HOST/gw/v1/audio/speech" \
   --output ./assets/audio/intro.mp3
 ```
 
-Sound effects and music are not relayed through the Gateway today (only speech). Pull
-those from the CC0 asset library (`using-origingame-assets`) instead.
+Sound effects (`eleven_text_to_sound_v2`) — returns raw MP3 bytes:
+
+```bash
+curl -fsS "$OG_HOST/gw/v1/sound-generation" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "text": "Short clean retro arcade coin pickup chime, no voice", "model_id": "eleven_text_to_sound_v2", "duration_seconds": 1.5, "loop": false }' \
+  --output ./assets/audio/coin.mp3
+```
+
+Music (`music_v2`) — use concise, instrumental game-ready tracks unless the brief
+calls for vocals; returns raw MP3 bytes:
+
+```bash
+curl -fsS "$OG_HOST/gw/v1/music" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "prompt": "Energetic retro arcade battle loop, bright chiptune, no vocals", "model_id": "music_v2", "music_length_ms": 30000, "force_instrumental": true }' \
+  --output ./assets/audio/battle-theme.mp3
+```
 
 ## Browser dashboard APIs
 
