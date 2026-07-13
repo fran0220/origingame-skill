@@ -61,11 +61,10 @@ curl -fsS "$OG_HOST/gw/v1/images/generations" \
   --data '{ "model": "gpt-image-2", "prompt": "flat pixel-art coin, transparent background", "n": 1, "size": "1024x1024" }'
 ```
 
-Image generation often takes 15-60s. The public `origingame.dev` edge (EdgeOne CDN)
-cuts origin responses around 15s and returns HTTP 524, so when `$OG_HOST` is the
-public portal and an image call 524s, retry against the Gateway origin directly with
-the same key: `https://api.origingame.dev/v1/images/generations`. Chat and speech are
-fast enough that `$OG_HOST/gw/v1` remains the default for them.
+Image generation often takes 15-60s. Prefer the direct Gateway host for long image
+jobs: `https://api.origingame.dev/v1/images/generations` with the same key. Chat and
+speech are usually fine via `$OG_HOST/gw/v1`; Studio Maker / Mission LLM streams must
+always use `https://api.origingame.dev` (never portal `/gw` for long SSE).
 
 Speech / text-to-speech (`eleven_v3`) — `voice` must be a real ElevenLabs `voice_id`
 (generic OpenAI names like `alloy` are rejected); returns raw MP3 bytes:
