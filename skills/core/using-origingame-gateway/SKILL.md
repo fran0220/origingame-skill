@@ -5,7 +5,9 @@ description: Uses OriginGame's Gateway proxy for account API keys, quota-aware O
 
 # Using OriginGame Gateway
 
-OriginGame does not implement accounts, quota, billing, or API-key issuance in this repo. Those live in the separate Origin Gateway service. This app proxies the Gateway at `/gw/api/*` and `/gw/v1/*`.
+OriginGame does not implement accounts, quota, billing, or API-key issuance in this repo. Those live in the separate **Origin Gateway** service, whose source is the **you-box** repository (`fran0220/you-box`, AGPL). This app only proxies Gateway HTTP at `/gw/api/*` and `/gw/v1/*`.
+
+Architecture authority in the monorepo: `docs/origin-gateway.md` (when working inside OriginGame).
 
 ## Environment
 
@@ -101,15 +103,18 @@ The public dashboard uses `/gw/api/*` with Gateway session cookies and `New-Api-
 
 ## Local development
 
-For local dev, the Node app defaults `GATEWAY_ORIGIN` to `http://localhost:3300`. Build/run the isolated Gateway binary there; do not copy Gateway source into this repository.
+For local dev, the Node app defaults `GATEWAY_ORIGIN` to `http://localhost:3300`. Run Origin Gateway from the **you-box** checkout or a prebuilt image listening on that port (or point `GATEWAY_ORIGIN` at a remote gateway). Do not copy Gateway source into this repository.
 
 ```bash
-PORT=3300 ./server/data/gateway-dev/gateway
+# Example: gateway process on :3300 (from you-box image or binary — not from this tree)
 OG_HOST=http://localhost:8787 OG_API_KEY=sk-... ../origingame-deploy/scripts/gateway.sh models
 ```
+
+Production long-SSE base remains `https://api.origingame.dev` (or `OG_AI_GATEWAY`), not portal `/gw`.
 
 ## Red lines
 
 - Do not add a parallel `/api/ai` surface to OriginGame unless the Gateway contract changes.
 - Do not implement accounts/quota/billing in this repo.
+- Do not vendor you-box / new-api AGPL source into OriginGame.
 - Do not store raw `sk-` keys server-side; the server hashes deploy-owner keys.
