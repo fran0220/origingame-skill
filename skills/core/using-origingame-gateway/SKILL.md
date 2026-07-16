@@ -49,11 +49,13 @@ curl -fsS "$OG_HOST/gw/v1/chat/completions" \
 
 Use the OpenAI-compatible client shape in app/server code too; set `baseURL` to `$OG_HOST/gw/v1` and pass the Gateway key as the bearer token.
 
-## Media generation (image + speech)
+## Media generation (image + speech + 3D)
 
-The Gateway relays OpenAI-compatible image and text-to-speech. Prefer the CC0 asset
-library first; use generation for bespoke art or voiceover. Generation spends quota,
-so only run it when the user asked for it.
+The Gateway relays OpenAI-compatible image and text-to-speech, plus Meshy-native 3D
+under `/meshy/*` on the **direct** AI host (`https://api.origingame.dev` / `OG_AI_GATEWAY`).
+Portal `/gw` does **not** proxy `/meshy/*`. Prefer the CC0 asset library first; use
+generation for bespoke art, voiceover, or hero 3D the catalog lacks. Generation spends
+quota, so only run it when the user asked for it (or Studio Mission needs it).
 
 Image (`gpt-image-2`) — returns `data[0].b64_json` (base64 PNG); decode and save into the project:
 
@@ -96,6 +98,69 @@ curl -fsS "$OG_HOST/gw/v1/music" \
   --data '{ "prompt": "Energetic retro arcade battle loop, bright chiptune, no vocals", "model_id": "music_v2", "music_length_ms": 30000, "force_instrumental": true }' \
   --output ./assets/audio/battle-theme.mp3
 ```
+
+### 3D mesh (Meshy proxy on direct AI host)
+
+Use the **direct** Gateway host (not `$OG_HOST/gw`). Create is billed; poll local tasks free.
+Studio agents use `origin_workbench_generate_3d` instead of raw curl. Manual flow:
+
+```bash
+AI="${OG_AI_GATEWAY:-https://api.origingame.dev}"
+
+# 1) Text-to-3d preview (untextured mesh) — billed
+curl -fsS "$AI/meshy/openapi/v2/text-to-3d" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{
+    "mode": "preview",
+    "prompt": "low poly medieval sword, game-ready, readable silhouette",
+    "topology": "triangle",
+    "target_polycount": 3000,
+    "should_remesh": true,
+    "target_formats": ["glb"]
+  }'
+# → {"result":"<preview-task-id>"}
+
+# 2) Poll local status (free; 2–5s) until status is SUCCESS
+curl -fsS "$AI/meshy/tasks/<preview-task-id>" \
+  -H "Authorization: Bearer $OG_API_KEY"
+# → status / progress / result_url (prefer GLB)
+
+# 3) Optional refine for textures (billed again)
+curl -fsS "$AI/meshy/openapi/v2/text-to-3d" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "mode": "refine", "preview_task_id": "<preview-task-id>", "enable_pbr": true, "target_formats": ["glb"] }'
+
+# 4) Download result_url immediately into the project (URLs expire — do not store the URL)
+curl -fsSL "<result_url>" -o ./assets/models/sword.glb
+```
+
+Image-to-3d (single charge, often better for heroes): `POST $AI/meshy/openapi/v1/image-to-3d`
+with `image_url` as a public URL or `data:image/...;base64,...` data URI, plus
+`topology`/`target_polycount`/`should_texture` as needed. Poly budgets: props 1–3k faces,
+characters 5–15k; topology `triangle` for Three.js.
+
+Postprocess (each create is billed; poll free):
+
+```bash
+# Remesh — reduce faces / triangle topology
+curl -fsS "$AI/meshy/openapi/v1/remesh" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "input_task_id": "<textured-task-id>", "topology": "triangle", "target_polycount": 5000, "target_formats": ["glb"] }'
+
+# Rig — humanoid auto-bind (requires textured humanoid; optional height_meters)
+curl -fsS "$AI/meshy/openapi/v1/rigging" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "input_task_id": "<textured-or-remesh-task-id>", "height_meters": 1.7 }'
+# Success payload nests rigged_character_glb_url + basic walk/run under result.*
+
+# Animate — preset action on a completed rig task
+curl -fsS "$AI/meshy/openapi/v1/animations" \
+  -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
+  --data '{ "rig_task_id": "<rig-task-id>", "action_id": 151 }'   # walk preset; see Studio generate_3d presets
+```
+
+Studio/agent: prefer `origin_workbench_generate_3d` with `operation: character | remesh | rig | animate`
+so downloads land under `assets/models/` without handling expiring URLs.
 
 ## Browser dashboard APIs
 

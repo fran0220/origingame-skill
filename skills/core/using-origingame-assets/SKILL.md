@@ -56,3 +56,12 @@ plus `ATTRIBUTION.txt`. `search`/`show` work without a key; `bundle`/`get` may r
 - Prefer one cohesive pack or visual style per scene; keep `poly_budget` consistent for 3D.
 - Pull only the groups/files the game actually uses.
 - Preserve `ATTRIBUTION.txt` in the project, even though CC0 attribution is optional.
+
+## AAA order of operations (with Studio / agents)
+
+1. **Catalog first** — search/install kit surfaces (environment, props, tiles, enemies, pickups).
+2. **Generate 3D only for heroes** the catalog misses after a real search (`origin_workbench_generate_3d` in Studio; Gateway `/meshy/*` for CLI agents). Prefer concept image → image-to-3d.
+3. **Generate 2D/audio** for textures, UI, SFX, music as needed.
+4. **Procedural geometry** only for particles, tiny fillers, collision helpers — not hero silhouettes.
+
+Every installed or generated file must be loaded by the game (relative path). Download URLs expire; never hotlink Gateway or asset API URLs from a deployed game.
