@@ -48,7 +48,7 @@ tools: assets_search · assets_show · assets_bundle · assets_recommend · asse
 REST fallback via the bundled helper (bundles return a fetch-plan, no zip):
 
 ```bash
-scripts/assets.sh search "low poly medieval knight" --kind 3d --format glb
+scripts/assets.sh search "weathered medieval knight" --kind 3d --format glb
 scripts/assets.sh show <group-id>
 scripts/assets.sh bundle --group <group-id> --format glb --out ./assets/origingame
 ```

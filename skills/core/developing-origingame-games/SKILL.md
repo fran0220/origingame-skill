@@ -24,7 +24,7 @@ python3 -m http.server 8080 -d ./my-game
 
 1. Keep `index.html` at the deploy directory root.
 2. Use relative asset paths (`./assets/player.png`), never root-absolute paths (`/assets/player.png`).
-3. Prefer the CC0 asset catalog first; for AAA heroes the catalog lacks, generate via Gateway 3D (`using-origingame-gateway` `/meshy/*` or Studio `origin_workbench_generate_3d`). Avoid pure procedural hero silhouettes. Never hotlink `/api/assets/...` or expiring generation URLs from a deployed game.
+3. Choose one approved world-kit language before sourcing assets. Use a cohesive CC0 catalog family only when its silhouette, materials, detail, scale, and role coverage fit; otherwise generate the missing terrain, structures, props, and actors through Gateway 3D (`using-origingame-gateway` `/meshy/*` or Studio `origin_workbench_generate_3d`) and use matching catalog support/dressing. Avoid pure procedural hero silhouettes. Never hotlink `/api/assets/...` or expiring generation URLs from a deployed game.
 4. Keep the game playable without OriginGame by guarding SDK calls:
 
 ```js

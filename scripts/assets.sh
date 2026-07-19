@@ -2,10 +2,10 @@
 # OriginGame asset helper (REST convenience wrapper; agents should prefer the asset MCP at
 # asset-mcp.origingame.dev). Bundles use the server fetch-plan (no zip): glTF/GLB primary + resources.
 # usage:
-#   assets.sh search "low poly medieval knight" [--kind 3d] [--theme fantasy] [--format glb] [--limit 10]
+#   assets.sh search "overcast forest" [--resource_type hdri] [--weather overcast] [--format hdr] [--limit 10]
 #   assets.sh show <group-id>
 #   assets.sh get <file-id> --out ./assets/origingame
-#   assets.sh bundle [--group <group-id>] [--file <file-id>] [--format glb|gltf] --out ./assets/origingame
+#   assets.sh bundle [--group <group-id>] [--file <file-id>] [--format glb|gltf|hdr|jpg] --out ./assets/origingame
 set -euo pipefail
 
 OG_HOST="${OG_HOST:-http://localhost:8787}"
@@ -28,7 +28,7 @@ case "$CMD" in
     while [[ $# -gt 0 ]]; do
       case "$1" in
         --limit) LIMIT="$2"; shift 2 ;;
-        --kind|--media_type|--game_genre|--theme|--visual_style|--camera_view|--role|--environment|--format|--engine_hint|--usage_hint)
+        --resource_type|--material_type|--time_of_day|--weather|--projection|--pbr_map|--source|--kind|--media_type|--game_genre|--theme|--visual_style|--camera_view|--role|--environment|--format|--engine_hint|--usage_hint)
           key="${1#--}"; PARAMS+=("$key=$2"); shift 2 ;;
         *) echo "unknown option: $1" >&2; exit 1 ;;
       esac
@@ -48,7 +48,7 @@ PY
 import json, sys
 d=json.loads(sys.argv[1])
 for i,item in enumerate(d.get('items', []), 1):
-    tags=', '.join(t['value'] for t in item.get('tags', []) if t['facet'] in ('game_genre','theme','visual_style','role','media_type'))
+    tags=', '.join(f"{t['facet']}:{t['value']}" for t in item.get('tags', []) if t['facet'] in ('resource_type','material_type','time_of_day','weather','game_genre','theme','visual_style','role','media_type'))
     print(f"{i}. {item['title']}  [{item['id']}]")
     print(f"   pack: {item['packName']} / {item['category']} · files: {item['fileCount']} · formats: {', '.join(item.get('formats', []))}")
     if tags: print(f"   tags: {tags}")

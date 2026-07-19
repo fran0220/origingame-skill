@@ -112,10 +112,8 @@ curl -fsS "$AI/meshy/openapi/v2/text-to-3d" \
   -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
   --data '{
     "mode": "preview",
-    "prompt": "low poly medieval sword, game-ready, readable silhouette",
-    "topology": "triangle",
-    "target_polycount": 3000,
-    "should_remesh": true,
+    "prompt": "weathered medieval longsword, forged steel, wrapped grip, readable game silhouette",
+    "should_remesh": false,
     "target_formats": ["glb"]
   }'
 # → {"result":"<preview-task-id>"}
@@ -136,16 +134,17 @@ curl -fsSL "<result_url>" -o ./assets/models/sword.glb
 
 Image-to-3d (single charge, often better for heroes): `POST $AI/meshy/openapi/v1/image-to-3d`
 with `image_url` as a public URL or `data:image/...;base64,...` data URI, plus
-`topology`/`target_polycount`/`should_texture` as needed. Poly budgets: props 1–3k faces,
-characters 5–15k; topology `triangle` for Three.js.
+`should_texture` as needed. Preserve source geometry by default; only send
+`should_remesh: true`, `topology`, and `target_polycount` for a deliberate,
+measured remesh. Do not use uniform low-poly targets as an art direction.
 
 Postprocess (each create is billed; poll free):
 
 ```bash
-# Remesh — reduce faces / triangle topology
+# Remesh — explicit measured optimization only
 curl -fsS "$AI/meshy/openapi/v1/remesh" \
   -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
-  --data '{ "input_task_id": "<textured-task-id>", "topology": "triangle", "target_polycount": 5000, "target_formats": ["glb"] }'
+  --data '{ "input_task_id": "<textured-task-id>", "topology": "triangle", "target_polycount": 30000, "target_formats": ["glb"] }'
 
 # Rig — humanoid auto-bind (requires textured humanoid; optional height_meters)
 curl -fsS "$AI/meshy/openapi/v1/rigging" \
@@ -156,7 +155,7 @@ curl -fsS "$AI/meshy/openapi/v1/rigging" \
 # Animate — preset action on a completed rig task
 curl -fsS "$AI/meshy/openapi/v1/animations" \
   -H "Authorization: Bearer $OG_API_KEY" -H 'Content-Type: application/json' \
-  --data '{ "rig_task_id": "<rig-task-id>", "action_id": 151 }'   # walk preset; see Studio generate_3d presets
+  --data '{ "rig_task_id": "<rig-task-id>", "action_id": 30 }'   # walk preset; see Studio generate_3d presets
 ```
 
 Studio/agent: prefer `origin_workbench_generate_3d` with `operation: character | remesh | rig | animate`
